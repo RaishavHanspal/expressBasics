@@ -14,8 +14,13 @@ app.listen(3000, () => {
     console.log("port connected :: 3000")
 });
 
-/** on port 3000 get request, it redirects you to login page template (login.hbs) */
+/** on port 3000 get request, it redirects you to home page template (home.hbs) */
 app.get("/", (request, response) => {
+    response.render("home");
+});
+
+/** on port 3000 get request, it redirects you to login page template (login.hbs) */
+app.get("/login", (request, response) => {
     response.render("login");
 });
 
@@ -47,8 +52,16 @@ app.get("/signup", (request, response) => {
  */
 app.post("/signup", async(request, response) => {
     const { name, password } = request.body;
-    console.log(password + " " + name);
-    const data = { name, password };
-    await collection.insertMany([data]);
-    response.render("home");
+    collection.findOne({ name: name }).then((user) => {
+        if (user) {
+            response.send("User Already exists! Try again...");
+        } else {
+            const data = { name, password };
+            collection.insertMany([data]).then(() => {
+                response.send("User Registered! Please login to continue...");
+            });
+        }
+    }).catch(err => {
+        console.log("Issue with login ", err)
+    })
 });
